@@ -1043,8 +1043,6 @@ static size_t mut_range_splice(TSMutState *st, const uint8_t *buf, size_t len,
     }
 
     if (!src_ptr) {
-      /* Fall back to the bank: stitch 1..3 entries into scratch. Chaos
-         mode draws any entries; normal mode matches g->symbol. */
       if (!st->bank_count) continue;
 
       BankIndex *bi = NULL;
@@ -1053,6 +1051,20 @@ static size_t mut_range_splice(TSMutState *st, const uint8_t *buf, size_t len,
         if (g->symbol >= st->sym_index_size) continue;
         bi = &st->sym_index[g->symbol];
         if (bi->count == 0) continue;
+      }
+
+      /* separator = bytes between first two members; ' ' if none */
+      uint32_t sep_s = st->nodes[members[0]].end_byte;
+      uint32_t sep_e = st->nodes[members[1]].start_byte;
+      uint8_t sep_fallback = ' ';
+      const uint8_t *sep;
+      uint32_t sep_len;
+      if (sep_e > sep_s && sep_e <= len) {
+        sep = buf + sep_s;
+        sep_len = sep_e - sep_s;
+      } else {
+        sep = &sep_fallback;
+        sep_len = 1;
       }
 
       uint32_t n_take = 1 + rng_below(st, 3);
@@ -1064,9 +1076,12 @@ static size_t mut_range_splice(TSMutState *st, const uint8_t *buf, size_t len,
         } else {
           e = &st->bank[bi->start + rng_below(st, bi->count)];
         }
-        uint32_t need = e->text_len + (k > 0 ? 1 : 0);
+        uint32_t need = e->text_len + (k > 0 ? sep_len : 0);
         if (acc + need > st->range_scratch_cap) break;
-        if (k > 0) st->range_scratch[acc++] = ' ';
+        if (k > 0) {
+          memcpy(st->range_scratch + acc, sep, sep_len);
+          acc += sep_len;
+        }
         memcpy(st->range_scratch + acc,
                st->bank_arena + e->text_offset, e->text_len);
         acc += e->text_len;

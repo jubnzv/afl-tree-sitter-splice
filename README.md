@@ -66,7 +66,7 @@ afl-fuzz -i corpus -o out -- ./target @@
 | `ts-lit` | 5 | Replace leaf with random literal |
 | `ts-dup` | 3 | Duplicate a subtree adjacent to itself |
 | `ts-ins` | 7 | Insert a type-compatible bank subtree after a node (grows input, capped at 2x) |
-| `ts-range` | 4 | Replace a contiguous run of same-symbol siblings with a same-symbol run from `add_buf` or 1..3 concatenated bank entries |
+| `ts-range` | 4 | Replace a contiguous run of same-symbol siblings with a same-symbol run from `add_buf` or 1..3 bank entries joined by the list's detected separator |
 | `ts-chaos` | 2 | Bypass the type-safety filter on `ts-bank` / `ts-add` / `ts-range` / `ts-kins` / `ts-stutter`: splice a random bank (or `add_buf`) node into the destination regardless of `TSSymbol`, or stutter the envelope of any parent around any descendant. Produces deliberately ungrammatical inputs to increase coverage. |
 | `ts-kdel` | 10 | Delete 1..3 contiguous children from a run of same-symbol siblings, swallowing one adjacent separator so the remaining list stays well-formed |
 | `ts-kins` | 10 | Insert 1..3 same-symbol children at a random boundary of a same-symbol sibling run. Donors come from `add_buf`, the bank, or a duplicated existing member. Separator is detected from the existing list |
